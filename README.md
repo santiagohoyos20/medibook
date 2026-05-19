@@ -1,36 +1,36 @@
 # MediBook
 
-API REST para la gestión de citas médicas. Permite a pacientes registrarse, buscar médicos y agendar citas con validación de conflictos de horario y fechas pasadas.
+REST API for managing medical appointments. Allows patients to register, search for doctors, and schedule appointments with conflict validation and past-date checks.
 
-## Requisitos
+## Requirements
 
-- **Node.js** v20 o superior
-- **PostgreSQL** v14 o superior
+- **Node.js** v20 or higher
+- **PostgreSQL** v14 or higher
 
-## Variables de entorno
+## Environment Variables
 
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+Create a `.env` file in the project root with the following variables:
 
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/medibook"
-JWT_SECRET="tu_secreto_jwt"
+JWT_SECRET="your_jwt_secret"
 JWT_EXPIRES_IN="7d"
 PORT=3000
 ```
 
-## Instalación
+## Installation
 
 ```bash
 npm install
 ```
 
-## Migraciones
+## Migrations
 
 ```bash
 npx prisma migrate dev
 ```
 
-## Iniciar en desarrollo
+## Start in Development
 
 ```bash
 npm run start:dev
@@ -42,10 +42,10 @@ npm run start:dev
 # Unit tests
 npm run test
 
-# Tests e2e (requiere base de datos de test activa con DATABASE_URL configurada)
+# E2E tests (requires an active test database with DATABASE_URL configured)
 npm run test:e2e
 
-# Cobertura
+# Coverage
 npm run test:cov
 ```
 
@@ -53,33 +53,33 @@ npm run test:cov
 
 ### Health
 
-| Método | Ruta    | Descripción         | Auth |
-|--------|---------|---------------------|------|
-| GET    | /health | Estado del servidor | No   |
+| Method | Route   | Description   | Auth |
+|--------|---------|---------------|------|
+| GET    | /health | Server status | No   |
 
 ### Auth
 
-| Método | Ruta           | Descripción                          | Auth |
-|--------|----------------|--------------------------------------|------|
-| POST   | /auth/register | Registrar usuario (paciente o médico) | No  |
-| POST   | /auth/login    | Iniciar sesión, devuelve JWT         | No   |
+| Method | Route          | Description                         | Auth |
+|--------|----------------|-------------------------------------|------|
+| POST   | /auth/register | Register a user (patient or doctor) | No   |
+| POST   | /auth/login    | Log in, returns a JWT               | No   |
 
-**Body registro paciente:**
+**Patient registration body:**
 ```json
 {
   "name": "string",
   "email": "string",
-  "password": "string (mín. 8 caracteres)",
+  "password": "string (min. 8 characters)",
   "role": "PATIENT"
 }
 ```
 
-**Body registro médico:**
+**Doctor registration body:**
 ```json
 {
   "name": "string",
   "email": "string",
-  "password": "string (mín. 8 caracteres)",
+  "password": "string (min. 8 characters)",
   "role": "DOCTOR",
   "specialty": "string"
 }
@@ -87,22 +87,22 @@ npm run test:cov
 
 ### Doctors
 
-| Método | Ruta         | Descripción                                | Auth |
+| Method | Route        | Description                                | Auth |
 |--------|--------------|--------------------------------------------|------|
-| GET    | /doctors     | Listar médicos (acepta `?specialty=` query) | No  |
-| GET    | /doctors/:id | Obtener médico por ID                      | No   |
+| GET    | /doctors     | List doctors (accepts `?specialty=` query) | No   |
+| GET    | /doctors/:id | Get doctor by ID                           | No   |
 
 ### Appointments
 
-| Método | Ruta                | Descripción                           | Auth   |
-|--------|---------------------|---------------------------------------|--------|
-| POST   | /appointments       | Crear cita                            | Bearer |
-| GET    | /appointments       | Listar citas del paciente autenticado | Bearer |
-| GET    | /appointments/:id   | Obtener cita por ID                   | Bearer |
-| PATCH  | /appointments/:id   | Actualizar estado de una cita         | Bearer |
-| DELETE | /appointments/:id   | Eliminar una cita                     | Bearer |
+| Method | Route             | Description                                     | Auth   |
+|--------|-------------------|-------------------------------------------------|--------|
+| POST   | /appointments     | Create an appointment                           | Bearer |
+| GET    | /appointments     | List appointments for the authenticated patient | Bearer |
+| GET    | /appointments/:id | Get appointment by ID                           | Bearer |
+| PATCH  | /appointments/:id | Update appointment status                       | Bearer |
+| DELETE | /appointments/:id | Delete an appointment                           | Bearer |
 
-**Body creación de cita:**
+**Appointment creation body:**
 ```json
 {
   "doctorId": "string",
