@@ -20,6 +20,13 @@ export class AppointmentsService {
       throw new BadRequestException('Appointment date cannot be in the past');
     }
 
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { id: dto.doctorId },
+    });
+    if (!doctor) {
+      throw new NotFoundException(`Doctor with id ${dto.doctorId} not found`);
+    }
+
     const conflict = await this.prisma.appointment.findUnique({
       where: {
         doctorId_date_timeSlot: {
