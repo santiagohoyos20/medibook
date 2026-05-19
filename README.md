@@ -111,12 +111,3 @@ npm run test:cov
   "reason": "string"
 }
 ```
-
-### Users
-
-| Método | Ruta        | Descripción            | Auth |
-|--------|-------------|------------------------|------|
-| GET    | /users      | Listar usuarios        | No   |
-| GET    | /users/:id  | Obtener usuario por ID | No   |
-| POST   | /users      | Crear usuario          | No   |
-| DELETE | /users/:id  | Eliminar usuario       | No   |
