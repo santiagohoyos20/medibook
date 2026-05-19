@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: medibook_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medibook
+    ports:
+      - '5432:5432'
+    volumes:
+      - medibook_data:/var/lib/postgresql/data
+
+volumes:
+  medibook_data:

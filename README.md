@@ -5,36 +5,44 @@ REST API for managing medical appointments. Allows patients to register, search 
 ## Requirements
 
 - **Node.js** v20 or higher
-- **PostgreSQL** v14 or higher
+- **Docker** (for the database)
 
-## Environment Variables
+## Setup
 
-Create a `.env` file in the project root with the following variables:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/medibook"
-JWT_SECRET="your_jwt_secret"
-JWT_EXPIRES_IN="7d"
-PORT=3000
-```
-
-## Installation
+**1. Clone and install dependencies**
 
 ```bash
 npm install
 ```
 
-## Migrations
+**2. Configure environment variables**
 
 ```bash
-npx prisma migrate dev
+cp .env.example .env
 ```
 
-## Start in Development
+Edit `.env` if you need to change any values (the defaults work with the Docker setup below).
+
+**3. Start the database**
+
+```bash
+docker-compose up -d
+```
+
+**4. Run migrations**
+
+```bash
+npx prisma migrate deploy
+```
+
+**5. Start the server**
 
 ```bash
 npm run start:dev
 ```
+
+> To stop the database: `docker-compose down`
+> To stop and delete all data: `docker-compose down -v`
 
 ## Tests
 
