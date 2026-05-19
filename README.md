@@ -35,7 +35,13 @@ docker-compose up -d
 npx prisma migrate deploy
 ```
 
-**5. Start the server**
+**5. Generate Prisma client**
+
+```bash
+npx prisma generate
+```
+
+**6. Start the server**
 
 ```bash
 npm run start:dev
@@ -52,9 +58,6 @@ npm run test
 
 # E2E tests (requires an active test database with DATABASE_URL configured)
 npm run test:e2e
-
-# Coverage
-npm run test:cov
 ```
 
 ## Endpoints
