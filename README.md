@@ -41,7 +41,15 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-**6. Start the server**
+**6. (Optional) Seed the database**
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+This creates 3 doctors and 2 patients with sample appointments. All accounts use `password123` as the password. Re-running it resets all data.
+
+**7. Start the server**
 
 ```bash
 npm run start:dev
