@@ -5,15 +5,20 @@
 **Claude Code**
 The primary AI tool used throughout the project. Accessed via the VSCode extension and CLI. Used for scaffolding the initial NestJS project structure, generating modules (auth, doctors, appointments), writing DTOs, implementing business logic, and generating unit tests. Also used to review and debug errors during development.
 
+**GitHub Copilot**
+Used for inline autocompletion while writing code and for generating commit message suggestions. Helped speed up repetitive typing and kept commit names consistent and descriptive.
+
 ---
 
 ## 2. My Approach
 
 I started by planning the solution together with Claude — discussing the architecture, the modules needed, and the main business rules before writing any code. Once the plan was clear, I handled the initial project setup myself (NestJS init, Prisma config, Docker Compose for PostgreSQL).
 
+Before sending any request to Claude Code, I would first talk with Claude (chat) to think through what I needed and refine the prompt — making it specific, unambiguous, and scoped correctly. Only after Claude helped me sharpen the prompt would I pass it to Claude Code for implementation. This two-step approach consistently produced better, more accurate results than going to Claude Code directly with a rough idea.
+
 From there I went module by module: auth first, then doctors, then appointments. For each one I implemented it with Claude's help and immediately verified that everything worked correctly — running the server, hitting the endpoints manually, and checking the responses. Whenever something didn't behave as expected I debugged it on the spot, using Claude to help identify the issue and fix it.
 
-At the end of the project I used Claude again to help write the documentation, including the README and this file.
+At the end of the project I used Claude again to help write the unit tests and the documentation, including the README and this file.
 
 ---
 
@@ -37,8 +42,6 @@ The full `auth.service.ts` including the `$transaction` block that creates both 
 **What it generated:**
 The complete `appointments.service.ts` as seen in the codebase — including the `findUnique` conflict check using the composite unique key `doctorId_date_timeSlot`, and the ownership check comparing `appointment.patientId !== userId`.
 
-**Verdict:** Used as-is. The conflict detection logic was correct and matched the Prisma schema's composite unique constraint exactly.
-
 ---
 
 ### Prompt 3 — Unit tests for AppointmentsService
@@ -49,47 +52,33 @@ The complete `appointments.service.ts` as seen in the codebase — including the
 **What it generated:**
 A full spec file with a `beforeEach` that creates a NestJS testing module with a mocked `PrismaService`. Each test case used `jest.fn()` to return specific mocked values.
 
-**Verdict:** Modified. The generated tests used `mockResolvedValueOnce` correctly for async Prisma calls, but the past-date test was using `new Date()` directly, which made it flaky depending on millisecond timing. I replaced it with a hardcoded past date string (`'2020-01-01'`) to make the test deterministic.
-
 ---
 
 ## 4. Critical Evaluation
 
-### Piece evaluated: `AppointmentsService.create` — past-date validation
+### Piece evaluated: Prisma setup and configuration
 
-```typescript
-const appointmentDate = new Date(dto.date);
-if (appointmentDate < new Date()) {
-  throw new BadRequestException('Appointment date cannot be in the past');
-}
-```
+**What the AI got wrong:**
+The AI consistently mixed solutions from different versions of Prisma. Since my project uses Prisma 7 (with the new generated client output), Claude kept suggesting patterns from older versions — for example, importing from `@prisma/client` directly instead of from the generated output path, or using deprecated configuration options. The suggestions weren't wrong in isolation, but they couldn't coexist: some lines came from Prisma 6 and others from Prisma 7, which caused the setup to break.
 
-**What the AI got right:**
-The logic is correct and concise. Using `new Date()` as the comparison point is the right approach for this use case.
+**What I did:**
+I decided to do the Prisma setup manually instead of relying on AI-generated code for that part. I went directly to the official Prisma documentation to understand the correct configuration for the version I was using and followed it step by step.
 
-**What it got wrong / what I improved:**
-The initial generated version compared the date without considering that `dto.date` comes in as a date-only string (`"2026-06-01"`), which JavaScript parses as UTC midnight. This meant that if a patient in a UTC-5 timezone tried to book for today, the comparison could incorrectly reject the appointment. I added a note in the DTO to document this limitation, and evaluated whether it was a real problem for the scope of this API (it was acceptable for now).
+**How I verified it:**
+Running `npx prisma generate` and `npx prisma migrate deploy` without errors confirmed the setup was correct. Once the client was generating properly and the database connection worked, I used Claude for the rest of the modules.
 
-Additionally, the AI did not validate that `dto.doctorId` actually exists in the database before creating the appointment. The foreign key constraint on the database would catch this, but it would produce a raw Prisma error instead of a clean `404`. I added a `doctor` existence check before the conflict query.
-
-**How I verified it works:**
-Ran the API manually with edge-case dates (yesterday, today, tomorrow) using a REST client and confirmed the correct exceptions were thrown. Also verified the unit tests passed with `npm run test`.
-
-**Security issues introduced:**
-None critical. The AI correctly used `patientId` from the JWT payload (not from the request body), preventing patients from creating appointments on behalf of others. Ownership checks on update and delete were also correct.
+**Lesson:**
+Not everything the AI suggests is up to date. Libraries like Prisma evolve quickly and the AI's knowledge doesn't always reflect the latest version. When the generated code produces errors that don't make sense, the right move is to stop prompting and read the official docs — that's what actually unblocked me here.
 
 ---
 
 ## 5. What I Learned
 
-**Prisma composite unique constraints in `findUnique`:**
-Before this project I had only used `findUnique` with single-field keys. The AI's use of `doctorId_date_timeSlot` as a compound key in `findUnique` — matching the `@@unique` defined in the Prisma schema — was new to me. I now understand how Prisma generates the compound key name from the field names joined by underscores.
+**Refining prompts before using Claude Code:**
+Going to Claude chat first to think through and sharpen a prompt before passing it to Claude Code made a noticeable difference in the quality of the output. A vague request produces generic code; a specific, well-scoped prompt produces something close to production-ready. This became a consistent habit throughout the project.
 
-**NestJS `$transaction` with a callback:**
-I had used `$transaction([...])` with an array of promises before, but not the interactive callback form (`$transaction(async (tx) => { ... })`). The callback form allows conditional logic inside the transaction (e.g., only create a Doctor record if the role is DOCTOR), which is not possible with the array form. The AI used this correctly and I learned the distinction.
+**AI doesn't replace reading the docs:**
+As the Prisma setup showed, the AI can confidently give you outdated or mixed-version advice. I learned to recognize when something feels inconsistent and to go straight to the official documentation instead of keep prompting. That saved more time than any number of follow-up prompts would have.
 
-**JWT strategy with Passport in NestJS:**
-The `JwtStrategy` extending `PassportStrategy(Strategy)` with the `validate` method that returns the payload which becomes `req.user` — this pattern was not obvious to me before. Understanding that `validate`'s return value is what gets attached to the request made the guard and controller integration clear.
-
-**`class-validator` with conditional validation:**
-Using `@ValidateIf` and `@IsOptional` together to make `specialty` required only for doctors was something I learned by reading the generated DTO and then looking up the docs to understand why it worked.
+**Prisma composite unique keys in `findUnique`:**
+I didn't know you could use a compound key directly in `findUnique` using the auto-generated name (`doctorId_date_timeSlot`). Seeing it generated in the appointments service and then verifying it against the schema made it click.
