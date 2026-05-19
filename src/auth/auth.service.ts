@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -18,15 +18,27 @@ export class AuthService {
       throw new ConflictException('Email already in use');
     }
 
+    if (dto.role === 'DOCTOR' && !dto.specialty) {
+      throw new BadRequestException('specialty is required for doctors');
+    }
+
     const hashed = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        name: dto.name,
-        email: dto.email,
-        password: hashed,
-        role: dto.role,
-      },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name: dto.name,
+          email: dto.email,
+          password: hashed,
+          role: dto.role,
+        },
+      });
+
+      if (dto.role === 'DOCTOR') {
+        await tx.doctor.create({ data: { specialty: dto.specialty!, userId: newUser.id } });
+      }
+
+      return newUser;
     });
 
     return { accessToken: this.signToken(user.id, user.email, user.role) };

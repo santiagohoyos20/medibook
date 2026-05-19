@@ -19,4 +19,8 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(Role)
   role?: Role = Role.PATIENT;
+
+  @IsOptional()
+  @IsString()
+  specialty?: string;
 }
