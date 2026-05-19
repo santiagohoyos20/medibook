@@ -50,6 +50,18 @@ npm run start:dev
 > To stop the database: `docker-compose down`
 > To stop and delete all data: `docker-compose down -v`
 
+## API Documentation
+
+Once the server is running, Swagger UI is available at:
+
+```
+http://localhost:3000/api
+```
+
+You can test all endpoints interactively from the browser. To test authenticated routes, click **Authorize** and paste your JWT token (obtained from `/auth/login`).
+
+The raw OpenAPI JSON is available at `http://localhost:3000/api-json` and can be imported into Insomnia, Postman, or any other REST client.
+
 ## Tests
 
 ```bash

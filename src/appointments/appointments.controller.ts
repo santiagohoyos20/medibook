@@ -9,11 +9,14 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { AppointmentsService } from './appointments.service.js';
 import { CreateAppointmentDto } from './dto/create-appointment.dto.js';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto.js';
 
+@ApiTags('appointments')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('appointments')
 export class AppointmentsController {
